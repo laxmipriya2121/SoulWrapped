@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoulWrapped - Your Digital Journal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <script>
+        // TailwindCSS Configuration
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'journal': {
+                            50: '#faf7f5',
+                            100: '#f5ebe6',
+                            200: '#e6d5cc',
+                            300: '#d4bfb3',
+                            400: '#c2a899',
+                            500: '#b09280',
+                            600: '#9e7c66',
+                            700: '#8c664d',
+                            800: '#7a5033',
+                            900: '#683a1a',
+                        },
+                        'warm': {
+                            50: '#fff5f5',
+                            100: '#ffe4e4',
+                            200: '#ffd4d4',
+                            300: '#ffa4a4',
+                            400: '#ff8484',
+                            500: '#ff6464',
+                            600: '#ff4444',
+                        }
+                    },
+                    fontFamily: {
+                        'serif': ['Playfair Display', 'serif'],
+                        'sans': ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Styles */
+        .scrapbook-card {
+            transform: rotate(var(--rotation));
+            transition: transform 0.3s ease;
+        }
+        .scrapbook-card:hover {
+            transform: rotate(0deg) scale(1.05);
+            z-index: 10;
+        }
+        .input-field {
+            @apply w-full px-4 py-3 border border-warm-200 rounded-lg focus:ring-2 focus:ring-warm-300 focus:border-transparent;
+            min-height: 80px;
+            height: 80px;
+            resize: none;
+        }
+        
+        .btn-primary {
+            @apply px-6 py-3 text-white rounded-lg transition-colors font-medium min-w-[120px] text-center;
+        }
+
+        .entry-container {
+            @apply bg-white p-6 rounded-xl shadow-sm border border-journal-100;
+        }
+
+        #promptText, #dailyQuestion {
+            @apply leading-relaxed;
+        }
+
+        textarea {
+            @apply resize-y;
+        }
+
+        textarea::placeholder {
+            @apply text-warm-400;
+        }
+
+        .card {
+            @apply bg-warm-50 p-6 rounded-xl shadow-md border border-warm-100;
+        }
+
+        .journal-input {
+            min-height: 80px;
+            height: 80px;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-journal-50 font-sans">
+    <!-- Header -->
+    <header class="py-6 px-4 bg-white shadow-sm">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-4xl font-serif text-journal-800 italic">SoulWrapped</h1>
+            <p class="text-journal-600 mt-2">Your digital sanctuary for self-reflection</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto p-4 space-y-8">
+        <!-- Daily Prompt Section -->
+        <section class="card">
+            <div class="space-y-6">
+                <!-- Daily Question Section -->
+                <div class="bg-warm-50 p-8 rounded-xl shadow-md border border-warm-100">
+                    <div class="max-w-2xl mx-auto">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-serif text-journal-800">Daily Reflection</h2>
+                            <button id="newPromptBtn" class="btn-primary bg-warm-400 hover:bg-warm-500 flex items-center gap-2">
+                                <span>Surprise Me</span>
+                                <span class="text-xl">✨</span>
+                            </button>
+                        </div>
+                        <div class="bg-white/80 backdrop-blur-sm rounded-lg p-6 mb-6 shadow-sm">
+                            <p id="dailyQuestion" class="text-xl text-journal-700"></p>
+                        </div>
+                        <textarea id="dailyAnswer" class="input-field mb-6 bg-white/90" placeholder="Reflect on your day..."></textarea>
+                        <button id="saveDailyBtn" class="btn-primary w-full bg-journal-600 hover:bg-journal-700">Save Daily Reflection</button>
+                    </div>
+                </div>
+
+                <!-- Journal Entry Section -->
+                <div class="bg-warm-50 p-8 rounded-xl shadow-md border border-warm-100">
+                    <div class="max-w-2xl mx-auto">
+                        <h2 class="text-2xl font-serif text-journal-800 mb-6">Journal Entry</h2>
+                        <textarea id="journalEntry" class="input-field journal-input mb-6 bg-white/90" placeholder="Write freely about anything on your mind..."></textarea>
+                        <div class="flex justify-between items-center">
+                            <button id="saveJournalBtn" class="btn-primary flex-grow mr-4 bg-journal-600 hover:bg-journal-700">Save Journal Entry</button>
+                            <button id="voiceRecordBtn" class="btn-primary bg-warm-100 text-warm-600 hover:bg-warm-200 flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                                </svg>
+                                Record Voice
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Zine of the Month -->
+        <section class="card">
+            <h2 class="text-2xl font-serif text-journal-800 mb-6">Your Daily Reflection</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Word Cloud -->
+                <div class="bg-journal-100 rounded-lg p-4">
+                    <h3 class="font-serif text-lg mb-3">Your Words</h3>
+                    <div id="wordCloud" class="min-h-[200px] flex flex-wrap gap-2 justify-center items-center">
+                        <!-- Word cloud will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Mood Summary -->
+                <div class="bg-journal-100 rounded-lg p-4">
+                    <h3 class="font-serif text-lg mb-3">Mood Palette</h3>
+                    <div class="flex flex-wrap gap-3" id="moodSelector">
+                        <button class="text-2xl hover:scale-110 transition-transform">😊</button>
+                        <button class="text-2xl hover:scale-110 transition-transform">😌</button>
+                        <button class="text-2xl hover:scale-110 transition-transform">🤔</button>
+                        <button class="text-2xl hover:scale-110 transition-transform">😢</button>
+                        <button class="text-2xl hover:scale-110 transition-transform">✨</button>
+                    </div>
+                </div>
+
+                <!-- Highlighted Entry -->
+                <div class="bg-journal-100 rounded-lg p-4">
+                    <h3 class="font-serif text-lg mb-3">Captured Moment</h3>
+                    <p id="highlightedEntry" class="italic text-journal-700"></p>
+                </div>
+
+                <!-- AI Poem -->
+                <div class="bg-journal-100 rounded-lg p-4">
+                    <h3 class="font-serif text-lg mb-3">Your Day in Verse</h3>
+                    <p class="italic text-journal-700">
+                        Write your thoughts above to see them transformed into verse...
+                    </p>
+                </div>
+            </div>
+            <button id="downloadPdfBtn" class="btn-primary mt-6">Download as PDF</button>
+        </section>
+
+        <!-- Zine Library -->
+        <section>
+            <h2 class="text-2xl font-serif text-journal-800 mb-6">Your Zine Library</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-6" id="zineLibrary">
+                <!-- Zine cards will be populated by JavaScript -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal for Zine Details -->
+    <div id="zineModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+        <div class="bg-white rounded-xl p-6 max-w-lg w-full mx-4">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-2xl font-serif text-journal-800">Monthly Reflection</h3>
+                <button class="text-journal-500 hover:text-journal-700" onclick="closeModal()">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // Prompts data
+        const prompts = [
+            "What made you smile today?",
+            "Describe a moment when you felt truly alive.",
+            "What's a small change you'd like to make in your life?",
+            "Write about a sound that brings back memories.",
+            "What would you tell your younger self?",
+            "Describe your perfect morning routine.",
+            "What's a fear you'd like to overcome?",
+            "Write about a place that feels like home.",
+            "What's something you're learning about yourself?",
+            "Describe a tiny joy that others might overlook."
+        ];
+
+        // Daily questions that rotate (one per day, same for all users)
+        const dailyQuestions = [
+            "What was the highlight of your day?",
+            "What challenged you today?",
+            "What made you feel grateful today?",
+            "What did you learn about yourself today?",
+            "Who made your day better today?",
+            "What would you do differently today?",
+            "What brought you peace today?"
+        ];
+
+        // Get daily question based on the date
+        function getDailyQuestion() {
+            const today = new Date();
+            const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+            return dailyQuestions[dayOfYear % dailyQuestions.length];
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize daily prompt counter in localStorage if not exists
+            if (!localStorage.getItem('lastPromptDate')) {
+                localStorage.setItem('lastPromptDate', new Date().toDateString());
+                localStorage.setItem('promptsRemaining', '2');
+            }
+
+            // Check if it's a new day
+            const today = new Date().toDateString();
+            const lastDate = localStorage.getItem('lastPromptDate');
+            if (today !== lastDate) {
+                localStorage.setItem('lastPromptDate', today);
+                localStorage.setItem('promptsRemaining', '2');
+            }
+
+            // Set the daily question
+            const dailyQuestionElement = document.getElementById('dailyQuestion');
+            if (dailyQuestionElement) {
+                dailyQuestionElement.textContent = getDailyQuestion();
+            }
+
+            // Add click handler for Surprise Me button
+            document.getElementById('newPromptBtn').addEventListener('click', () => {
+                const promptsRemaining = parseInt(localStorage.getItem('promptsRemaining') || '0');
+                if (promptsRemaining > 0) {
+                    setRandomPrompt();
+                }
+            });
+
+            // Update button state initially
+            updateSurpriseButtonState();
+            
+            // Load saved entries if they exist
+            const savedDaily = localStorage.getItem('currentDailyAnswer');
+            const savedJournal = localStorage.getItem('currentEntry');
+            
+            if (savedDaily) {
+                document.getElementById('dailyAnswer').value = savedDaily;
+            }
+            if (savedJournal) {
+                document.getElementById('journalEntry').value = savedJournal;
+            }
+
+            // Get all entries
+            const entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
+            const hasEnoughEntries = entries.length >= 3;
+
+            if (isNewUser || !hasEnoughEntries) {
+                // For new users or users with few entries, hide the zine section
+                document.querySelector('.card:nth-child(2)').innerHTML = `
+                    <div class="text-center p-8">
+                        <h2 class="text-2xl font-serif text-journal-800 mb-4">Your Daily Reflection</h2>
+                        <p class="text-journal-600 mb-4">Write at least 3 entries to unlock your personalized insights!</p>
+                        <div class="bg-journal-100 rounded-lg p-6">
+                            <p class="text-journal-700">
+                                You'll see:<br>
+                                • Word cloud of your most used words<br>
+                                • Mood patterns and insights<br>
+                                • Memorable moments from your entries<br>
+                                • A daily verse inspired by your writing
+                            </p>
+                        </div>
+                        <p class="text-journal-500 mt-4">${entries.length}/3 entries written</p>
+                    </div>
+                `;
+                
+                // Hide zine library for new users
+                document.getElementById('zineLibrary').parentElement.style.display = 'none';
+            } else {
+                // For users with enough entries, show actual data
+                generateWordCloud(entries);
+                updateMoodSummary();
+                setRandomHighlight(entries);
+                generateDailyVerse(entries);
+                
+                // Only show Zine Library if user has been journaling for a month
+                const oldestEntry = entries.length > 0 ? new Date(entries[0].date) : new Date();
+                const oneMonthAgo = new Date();
+                oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+                
+                if (oldestEntry <= oneMonthAgo) {
+                    document.getElementById('zineLibrary').parentElement.style.display = 'block';
+                    generateZineLibrary(entries);
+                } else {
+                    document.getElementById('zineLibrary').parentElement.style.display = 'none';
+                }
+            }
+        });
+
+        // Generate word cloud from actual entries
+        function generateWordCloud(entries) {
+            const wordCloudDiv = document.getElementById('wordCloud');
+            wordCloudDiv.innerHTML = '';
+            
+            // Combine all entries and count word frequencies
+            const words = entries
+                .map(entry => entry.text.toLowerCase())
+                .join(' ')
+                .split(/\W+/)
+                .filter(word => 
+                    word.length > 3 && 
+                    !['this', 'that', 'have', 'with', 'just'].includes(word)
+                );
+            
+            const wordCount = {};
+            words.forEach(word => {
+                wordCount[word] = (wordCount[word] || 0) + 1;
+            });
+
+            // Convert to array and sort by frequency
+            const sortedWords = Object.entries(wordCount)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 8);  // Take top 8 words
+
+            // Create word cloud elements
+            sortedWords.forEach(([word, count]) => {
+                const size = count > 3 ? 'text-3xl' : 
+                           count > 2 ? 'text-2xl' : 'text-xl';
+                const span = document.createElement('span');
+                span.textContent = word;
+                span.className = `${size} text-journal-${Math.floor(Math.random() * 4 + 6)}00`;
+                wordCloudDiv.appendChild(span);
+            });
+        }
+
+        // Generate zine library
+        function generateZineLibrary(entries) {
+            const library = document.getElementById('zineLibrary');
+            const months = ['January', 'February', 'March'];
+            
+            months.forEach(month => {
+                const rotation = Math.random() * 6 - 3;
+                const card = document.createElement('div');
+                card.className = 'scrapbook-card card cursor-pointer';
+                card.style.setProperty('--rotation', `${rotation}deg`);
+                card.innerHTML = `
+                    <h3 class="font-serif text-lg mb-2">${month} 2024</h3>
+                    <div class="aspect-square bg-journal-100 rounded-lg mb-2"></div>
+                    <p class="text-sm text-journal-600">Click to view</p>
+                `;
+                card.onclick = () => openZineModal(month, entries);
+                library.appendChild(card);
+            });
+        }
+
+        // Modal functions
+        function openZineModal(month, entries) {
+            const modal = document.getElementById('zineModal');
+            const content = document.getElementById('modalContent');
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <h4 class="font-serif text-xl">${month} 2024</h4>
+                    <div class="bg-journal-100 p-4 rounded-lg">
+                        <p class="italic">Your journey this month was filled with moments of reflection and growth...</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-journal-100 p-4 rounded-lg">
+                            <h5 class="font-serif mb-2">Top Moods</h5>
+                            <p>${getTopMoods(entries)}</p>
+                        </div>
+                        <div class="bg-journal-100 p-4 rounded-lg">
+                            <h5 class="font-serif mb-2">Writing Streak</h5>
+                            <p>${getWritingStreak(entries)}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('zineModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // Set random highlight from actual entries
+        function setRandomHighlight(entries) {
+            if (!entries || entries.length === 0) return;
+            
+            // Find meaningful sentences (ending with punctuation)
+            const sentences = entries
+                .map(entry => entry.text.match(/[^.!?]+[.!?]+/g) || [])
+                .flat()
+                .filter(sentence => sentence.trim().length > 30);  // Min length for meaningful quote
+
+            if (sentences.length > 0) {
+                const randomSentence = sentences[Math.floor(Math.random() * sentences.length)].trim();
+                document.getElementById('highlightedEntry').textContent = randomSentence;
+            }
+        }
+
+        // Update mood summary based on selected moods
+        function updateMoodSummary() {
+            const moods = JSON.parse(localStorage.getItem('selectedMoods') || '[]');
+            const moodButtons = document.querySelectorAll('#moodSelector button');
+            
+            // Reset all buttons
+            moodButtons.forEach(btn => btn.classList.remove('scale-125', 'opacity-50'));
+            
+            // Show most recent moods
+            if (moods.length > 0) {
+                const recentMoods = moods.slice(-3);  // Get last 3 moods
+                moodButtons.forEach(btn => {
+                    if (recentMoods.includes(btn.textContent)) {
+                        btn.classList.add('scale-125');
+                    } else {
+                        btn.classList.add('opacity-50');
+                    }
+                });
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('saveDailyBtn').addEventListener('click', () => saveEntry('daily'));
+        document.getElementById('saveJournalBtn').addEventListener('click', () => saveEntry('journal'));
+
+        document.getElementById('voiceRecordBtn').addEventListener('click', () => {
+            alert('Voice recording feature coming soon!');
+        });
+
+        document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+            alert('PDF download feature coming soon!');
+        });
+
+        // Update mood selector functionality
+        document.querySelectorAll('#moodSelector button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const moods = JSON.parse(localStorage.getItem('selectedMoods') || '[]');
+                const mood = this.textContent;
+                
+                // Add new mood to history
+                moods.push(mood);
+                localStorage.setItem('selectedMoods', JSON.stringify(moods));
+                
+                // Update display
+                updateMoodSummary();
+            });
+        });
+
+        // Generate a daily verse based on user's entries
+        function generateDailyVerse(entries) {
+            if (!entries || entries.length === 0) return;
+
+            const verseContainer = document.querySelector('.card:nth-child(2) .grid');
+            
+            // Find the AI Poem div and update its content
+            const poemDiv = Array.from(verseContainer.children).find(
+                div => div.querySelector('h3')?.textContent === 'Your Day in Verse'
+            );
+
+            if (poemDiv) {
+                // Get today's entry if it exists
+                const today = new Date().toDateString();
+                const todayEntry = entries.find(entry => 
+                    new Date(entry.date).toDateString() === today
+                );
+
+                if (todayEntry) {
+                    // Generate a simple verse based on today's entry
+                    const words = todayEntry.text
+                        .split(/\W+/)
+                        .filter(word => word.length > 3)
+                        .filter(word => !['this', 'that', 'have', 'with'].includes(word.toLowerCase()));
+                    
+                    const selectedWords = words
+                        .filter((_, i) => i % 3 === 0)  // Take every third word for variety
+                        .slice(0, 4);  // Get 4 words for our verse
+
+                    poemDiv.querySelector('p').innerHTML = `
+                        Through ${selectedWords[0] || 'thoughts'} deep and ${selectedWords[1] || 'moments'} clear,<br>
+                        Your ${selectedWords[2] || 'story'} brings a ${selectedWords[3] || 'light'} so near.<br>
+                        In this day's gentle flowing stream,<br>
+                        Your words paint pictures like a dream.
+                    `;
+                } else {
+                    // Default verse for when there's no entry today
+                    poemDiv.querySelector('p').innerHTML = `
+                        A blank page waits with patience true,<br>
+                        For thoughts and dreams to flow from you.<br>
+                        Each moment holds a story new,<br>
+                        What will today's tale mean to you?
+                    `;
+                }
+            }
+        }
+
+        // Generate verse from the current entry
+        function generateVerseFromEntry(entryText) {
+            if (!entryText) return;
+
+            const verseSection = Array.from(document.querySelectorAll('.bg-journal-100'))
+                .find(div => div.querySelector('h3')?.textContent === 'Your Day in Verse');
+            
+            if (verseSection) {
+                // Extract meaningful words from the entry
+                const words = entryText
+                    .toLowerCase()
+                    .split(/\W+/)
+                    .filter(word => 
+                        word.length > 3 && 
+                        !['this', 'that', 'have', 'with', 'just', 'like', 'very', 'about'].includes(word)
+                    );
+
+                if (words.length > 0) {
+                    // Pick interesting words from different parts of the entry
+                    const quarterLength = Math.floor(words.length / 4);
+                    const selectedWords = [
+                        words[Math.floor(Math.random() * quarterLength)], // First quarter
+                        words[Math.floor(quarterLength + Math.random() * quarterLength)], // Second quarter
+                        words[Math.floor(2 * quarterLength + Math.random() * quarterLength)], // Third quarter
+                        words[Math.floor(3 * quarterLength + Math.random() * quarterLength)]  // Last quarter
+                    ].filter(Boolean); // Remove any undefined values
+
+                    // Fill in with default words if we don't have enough
+                    while (selectedWords.length < 4) {
+                        selectedWords.push(['heart', 'mind', 'soul', 'dream'][selectedWords.length]);
+                    }
+
+                    verseSection.innerHTML = `
+                        <h3 class="font-serif text-lg mb-3">Your Day in Verse</h3>
+                        <p class="italic text-journal-700">
+                            Through ${selectedWords[0]} deep and ${selectedWords[1]} clear,<br>
+                            Your ${selectedWords[2]} brings a ${selectedWords[3]} so near.<br>
+                            Each word a treasure, each thought divine,<br>
+                            Your story today, uniquely thine.
+                        </p>
+                    `;
+                }
+            }
+        }
+
+        // Auto-save as draft while typing
+        document.getElementById('journalEntry').addEventListener('input', (e) => {
+            localStorage.setItem('currentEntry', e.target.value);
+        });
+
+        document.getElementById('dailyAnswer').addEventListener('input', (e) => {
+            localStorage.setItem('currentDailyAnswer', e.target.value);
+        });
+
+        // Update save entry function to handle different types
+        function saveEntry(type) {
+            const textarea = type === 'daily' ? document.getElementById('dailyAnswer') : document.getElementById('journalEntry');
+            const button = type === 'daily' ? document.getElementById('saveDailyBtn') : document.getElementById('saveJournalBtn');
+            const entry = textarea.value;
+
+            if (entry.trim()) {
+                // Save to entries history
+                const entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
+                entries.push({
+                    type: type,
+                    text: entry,
+                    date: new Date().toISOString(),
+                    prompt: type === 'daily' ? getDailyQuestion() : document.getElementById('promptText').textContent
+                });
+                localStorage.setItem('journalEntries', JSON.stringify(entries));
+
+                // Clear the textarea
+                textarea.value = '';
+
+                // Show success message
+                const originalText = button.textContent;
+                button.textContent = 'Saved!';
+                button.classList.add('bg-green-600');
+
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('bg-green-600');
+                }, 2000);
+
+                // Clear localStorage draft
+                localStorage.removeItem(type === 'daily' ? 'currentDailyAnswer' : 'currentEntry');
+
+                // Update verse if both entries are saved
+                const allEntries = entries.filter(e => 
+                    new Date(e.date).toDateString() === new Date().toDateString()
+                );
+                if (allEntries.length >= 1) {
+                    generateVerseFromEntry(allEntries.map(e => e.text).join(' '));
+                }
+            }
+        }
+
+        // Set random prompt with animation and limit
+        function setRandomPrompt() {
+            const promptsRemaining = parseInt(localStorage.getItem('promptsRemaining') || '2');
+            const promptElement = document.getElementById('dailyQuestion');
+            
+            if (promptsRemaining > 0) {
+                const currentPrompt = promptElement.textContent || '';
+                let newPrompt = currentPrompt;
+                
+                // Make sure we get a different prompt
+                while (newPrompt === currentPrompt) {
+                    newPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+                }
+                
+                // Add fade out effect
+                promptElement.style.opacity = '0';
+                
+                // Change text and fade in after a short delay
+                setTimeout(() => {
+                    promptElement.textContent = newPrompt;
+                    promptElement.style.opacity = '1';
+                }, 300);
+
+                // Update remaining prompts
+                localStorage.setItem('promptsRemaining', (promptsRemaining - 1).toString());
+                updateSurpriseButtonState();
+            }
+        }
+
+        // Update "Surprise Me" button state
+        function updateSurpriseButtonState() {
+            const promptsRemaining = parseInt(localStorage.getItem('promptsRemaining') || '0');
+            const surpriseBtn = document.getElementById('newPromptBtn');
+            
+            if (promptsRemaining === 0) {
+                surpriseBtn.classList.remove('btn-primary', 'bg-warm-400', 'hover:bg-warm-500');
+                surpriseBtn.classList.add('bg-journal-200', 'text-journal-500', 'cursor-not-allowed');
+                surpriseBtn.title = 'You can get 2 new prompts each day';
+            } else {
+                surpriseBtn.classList.remove('bg-journal-200', 'text-journal-500', 'cursor-not-allowed');
+                surpriseBtn.classList.add('btn-primary', 'bg-warm-400', 'hover:bg-warm-500');
+                surpriseBtn.title = `${promptsRemaining} new prompt${promptsRemaining !== 1 ? 's' : ''} remaining today`;
+            }
+        }
+
+        // Add transition style for daily question
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = `
+            #dailyQuestion {
+                transition: opacity 0.3s ease-in-out;
+            }
+        `;
+        document.head.appendChild(styleSheet);
+    </script>
+</body>
+</html> 
