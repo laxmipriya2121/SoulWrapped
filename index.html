@@ -232,26 +232,35 @@
             "What brought you peace today?"
         ];
 
-        // Get daily question based on the date
+        // Get daily question based on the date in IST
+        function getISTDate() {
+            const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+            const utc = new Date().getTime() + (new Date().getTimezoneOffset() * 60 * 1000);
+            return new Date(utc + istOffset);
+        }
+
         function getDailyQuestion() {
-            const today = new Date();
-            const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+            const istDate = getISTDate();
+            const startOfYear = new Date(istDate.getFullYear(), 0, 0);
+            const dayOfYear = Math.floor((istDate - startOfYear) / (1000 * 60 * 60 * 24));
             return dailyQuestions[dayOfYear % dailyQuestions.length];
         }
 
         // Initialize the app
         document.addEventListener('DOMContentLoaded', () => {
             // Initialize daily prompt counter in localStorage if not exists
+            const istDate = getISTDate();
+            const istDateString = istDate.toDateString();
+
             if (!localStorage.getItem('lastPromptDate')) {
-                localStorage.setItem('lastPromptDate', new Date().toDateString());
+                localStorage.setItem('lastPromptDate', istDateString);
                 localStorage.setItem('promptsRemaining', '2');
             }
 
-            // Check if it's a new day
-            const today = new Date().toDateString();
+            // Check if it's a new day in IST
             const lastDate = localStorage.getItem('lastPromptDate');
-            if (today !== lastDate) {
-                localStorage.setItem('lastPromptDate', today);
+            if (istDateString !== lastDate) {
+                localStorage.setItem('lastPromptDate', istDateString);
                 localStorage.setItem('promptsRemaining', '2');
             }
 
@@ -332,7 +341,14 @@
         // Generate word cloud from actual entries
         function generateWordCloud(entries) {
             const wordCloudDiv = document.getElementById('wordCloud');
+            if (!wordCloudDiv) return;
+            
             wordCloudDiv.innerHTML = '';
+            
+            if (!entries || entries.length === 0) {
+                wordCloudDiv.innerHTML = '<p class="text-journal-500 text-center">Start writing to see your most used words appear here...</p>';
+                return;
+            }
             
             // Combine all entries and count word frequencies
             const words = entries
@@ -341,7 +357,7 @@
                 .split(/\W+/)
                 .filter(word => 
                     word.length > 3 && 
-                    !['this', 'that', 'have', 'with', 'just'].includes(word)
+                    !['this', 'that', 'have', 'with', 'just', 'like', 'very', 'about', 'what', 'when', 'where', 'there'].includes(word)
                 );
             
             const wordCount = {};
@@ -354,13 +370,15 @@
                 .sort(([,a], [,b]) => b - a)
                 .slice(0, 8);  // Take top 8 words
 
-            // Create word cloud elements
+            // Create word cloud elements with different sizes based on frequency
             sortedWords.forEach(([word, count]) => {
-                const size = count > 3 ? 'text-3xl' : 
-                           count > 2 ? 'text-2xl' : 'text-xl';
+                const size = count > 5 ? 'text-3xl' : 
+                           count > 3 ? 'text-2xl' : 
+                           count > 1 ? 'text-xl' : 'text-lg';
+                const color = `text-journal-${Math.floor(Math.random() * 3 + 6)}00`;
                 const span = document.createElement('span');
                 span.textContent = word;
-                span.className = `${size} text-journal-${Math.floor(Math.random() * 4 + 6)}00`;
+                span.className = `${size} ${color} p-2 transform rotate-${Math.floor(Math.random() * 6) * 6} transition-transform hover:rotate-0`;
                 wordCloudDiv.appendChild(span);
             });
         }
@@ -595,7 +613,7 @@
                     type: type,
                     text: entry,
                     date: new Date().toISOString(),
-                    prompt: type === 'daily' ? getDailyQuestion() : document.getElementById('promptText').textContent
+                    prompt: type === 'daily' ? document.getElementById('dailyQuestion').textContent : null
                 });
                 localStorage.setItem('journalEntries', JSON.stringify(entries));
 
@@ -615,13 +633,10 @@
                 // Clear localStorage draft
                 localStorage.removeItem(type === 'daily' ? 'currentDailyAnswer' : 'currentEntry');
 
-                // Update verse if both entries are saved
-                const allEntries = entries.filter(e => 
-                    new Date(e.date).toDateString() === new Date().toDateString()
-                );
-                if (allEntries.length >= 1) {
-                    generateVerseFromEntry(allEntries.map(e => e.text).join(' '));
-                }
+                // Update word cloud and other displays
+                generateWordCloud(entries);
+                setRandomHighlight(entries);
+                generateDailyVerse(entries);
             }
         }
 
